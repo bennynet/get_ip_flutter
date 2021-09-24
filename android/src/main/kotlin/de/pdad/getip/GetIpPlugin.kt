@@ -1,5 +1,7 @@
 package de.pdad.getip
 
+import io.flutter.embedding.engine.plugins.FlutterPlugin
+import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
@@ -8,13 +10,19 @@ import io.flutter.plugin.common.PluginRegistry.Registrar
 import java.net.NetworkInterface
 import java.util.*
 
-class GetIpPlugin(): MethodCallHandler {
+class GetIpPlugin(): MethodCallHandler, FlutterPlugin {
+  lateinit var channel:MethodChannel;
   companion object {
     @JvmStatic
     fun registerWith(registrar: Registrar): Unit {
-      val channel = MethodChannel(registrar.messenger(), "get_ip")
-      channel.setMethodCallHandler(GetIpPlugin())
+      var plugin=GetIpPlugin()
+      plugin.onAttachedToEngine(registrar.messenger())
     }
+  }
+
+  fun onAttachedToEngine(messager: BinaryMessenger){
+    this.channel = MethodChannel(messager, "get_ip")
+    this.channel.setMethodCallHandler(this)
   }
 
   override fun onMethodCall(call: MethodCall, result: Result): Unit {
@@ -54,5 +62,13 @@ class GetIpPlugin(): MethodCallHandler {
       print(e);
     }
     return ""
+  }
+
+  override fun onAttachedToEngine(p0: FlutterPlugin.FlutterPluginBinding) {
+      this.onAttachedToEngine(p0.binaryMessenger)
+  }
+
+  override fun onDetachedFromEngine(p0: FlutterPlugin.FlutterPluginBinding) {
+      this.channel.setMethodCallHandler(null)
   }
 }
